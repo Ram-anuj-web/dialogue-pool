@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dialogue Pool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #080810;
+    --bg2: #0e0e1a;
+    --bg3: #13131f;
+    --gold: #c9a96e;
+    --gold2: #e8c98a;
+    --gold-dim: rgba(201,169,110,0.15);
+    --gold-border: rgba(201,169,110,0.25);
+    --text: #e8e0d0;
+    --text2: rgba(232,224,208,0.55);
+    --text3: rgba(232,224,208,0.28);
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --red: #e05a5a;
+    --radius: 10px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: 0.35;
+  }
+
+  /* Header */
+  .header {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px;
+    height: 62px;
+    background: rgba(8,8,16,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 0.5px solid var(--border);
+    flex-wrap: nowrap;
+    gap: 16px;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 19px; font-weight: 600; letter-spacing: 0.02em;
+    color: var(--text);
+  }
+  .logo em { color: var(--gold); font-style: italic; }
+
+  .header-middle { flex: 1; max-width: 460px; position: relative; }
+  .header-middle svg {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    width: 15px; height: 15px; color: var(--text3); pointer-events: none;
+  }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+
+  .tab-group { display: flex; background: var(--bg3); border-radius: 8px; padding: 3px; border: 0.5px solid var(--border); }
+  .tab {
+    font-size: 12px; padding: 5px 16px; border-radius: 6px; cursor: pointer;
+    color: var(--text3); background: transparent; border: none; font-family: 'DM Sans', sans-serif;
+    transition: all 0.18s; letter-spacing: 0.03em;
+  }
+  .tab.active { background: var(--gold-dim); color: var(--gold); border: 0.5px solid var(--gold-border); }
+
+  .btn-add {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--gold); color: #0a0a0f; border: none;
+    border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 500;
+    cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+  }
+  .btn-add:hover { background: var(--gold2); transform: translateY(-1px); }
+  .btn-add svg { width: 14px; height: 14px; }
+
+  /* Main layout */
+  .main { max-width: 1200px; margin: 0 auto; padding: 24px 32px 80px; position: relative; z-index: 1; }
+
+  /* Controls bar */
+  .controls {
+    display: flex; gap: 12px; align-items: center; margin-bottom: 24px; flex-wrap: wrap;
+  }
+
+  .search {
+    width: 100%; background: rgba(255,255,255,0.06); border: 0.5px solid var(--border2);
+    border-radius: var(--radius); padding: 9px 14px 9px 38px;
+    color: var(--text); font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none;
+    transition: border-color 0.15s;
+  }
+  .search::placeholder { color: var(--text3); }
+  .search:focus { border-color: var(--gold-border); }
+
+  .btn-shuffle {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--bg2); border: 0.5px solid var(--border2);
+    color: var(--text2); border-radius: var(--radius); padding: 10px 16px;
+    font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .btn-shuffle:hover { border-color: var(--gold-border); color: var(--gold); }
+  .btn-shuffle svg { width: 14px; height: 14px; }
+
+  /* Category pills */
+  .cats {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px;
+  }
+  .cat {
+    font-size: 11px; padding: 4px 14px; border-radius: 20px; cursor: pointer;
+    border: 0.5px solid var(--border); color: var(--text3);
+    background: transparent; font-family: 'DM Mono', monospace;
+    letter-spacing: 0.04em; transition: all 0.15s;
+  }
+  .cat.active { background: var(--gold-dim); border-color: var(--gold-border); color: var(--gold); }
+  .cat:hover:not(.active) { border-color: var(--border2); color: var(--text2); }
+
+  /* Spotlight */
+  .spotlight {
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: 14px; padding: 32px 36px; margin-bottom: 32px;
+    position: relative; overflow: hidden;
+    animation: fadeIn 0.4s ease;
+  }
+  .spotlight::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--gold) 40%, var(--gold2) 60%, transparent 100%);
+    opacity: 0.5;
+  }
+  .spotlight-label {
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em;
+    color: var(--gold); text-transform: uppercase; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .spotlight-label::after { content: ''; flex: 1; height: 0.5px; background: var(--gold-border); }
+  .spotlight-text {
+    font-family: 'Playfair Display', serif; font-size: 22px; line-height: 1.6;
+    color: var(--text); font-style: italic; margin-bottom: 16px; max-width: 780px;
+  }
+  .spotlight-meta { font-size: 12px; color: var(--text3); margin-bottom: 16px; }
+  .spotlight-meta strong { color: var(--text2); font-weight: 500; }
+  .spotlight-actions { display: flex; gap: 10px; }
+  .btn-sm {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; padding: 6px 14px; border-radius: 7px; cursor: pointer;
+    border: 0.5px solid var(--border2); background: var(--bg3); color: var(--text2);
+    font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+  }
+  .btn-sm:hover { border-color: var(--gold-border); color: var(--gold); }
+  .btn-sm svg { width: 12px; height: 12px; }
+  .btn-sm.liked { color: var(--gold); border-color: var(--gold-border); background: var(--gold-dim); }
+
+  /* Grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border-radius: 12px; overflow: hidden;
+    border: 0.5px solid var(--border);
+  }
+
+  .card {
+    background: var(--bg); padding: 24px 24px 18px;
+    transition: background 0.15s; position: relative; overflow: hidden;
+    animation: fadeIn 0.3s ease;
+  }
+  .card:hover { background: var(--bg2); }
+  .card-line {
+    position: absolute; top: 0; left: 20%; right: 20%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0; transition: opacity 0.25s;
+  }
+  .card:hover .card-line { opacity: 0.6; }
+
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .card-movie { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: var(--gold); text-transform: uppercase; }
+  .card-year { font-size: 11px; color: var(--text3); }
+
+  .card-dialogue {
+    font-family: 'Playfair Display', serif; font-size: 14px; line-height: 1.7;
+    color: rgba(232,224,208,0.8); font-style: italic; margin-bottom: 10px;
+    display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .card-speaker { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); letter-spacing: 0.04em; margin-bottom: 14px; }
+
+  .card-footer { display: flex; align-items: center; justify-content: space-between; }
+  .card-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+  .tag {
+    font-size: 9px; padding: 2px 8px; border-radius: 20px;
+    background: rgba(255,255,255,0.04); color: var(--text3);
+    border: 0.5px solid var(--border); font-family: 'DM Mono', monospace; letter-spacing: 0.04em;
+  }
+  .card-actions { display: flex; gap: 6px; }
+  .icon-btn {
+    background: none; border: none; color: var(--text3); cursor: pointer;
+    padding: 4px; transition: color 0.15s; display: flex; align-items: center;
+  }
+  .icon-btn:hover { color: var(--text); }
+  .icon-btn.liked { color: var(--gold); }
+  .icon-btn.danger:hover { color: var(--red); }
+  .icon-btn svg { width: 15px; height: 15px; }
+
+  /* Stats bar */
+  .statsbar {
+    display: flex; gap: 24px; margin-top: 24px; padding-top: 16px;
+    border-top: 0.5px solid var(--border);
+  }
+  .stat { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+  .stat b { color: var(--text2); font-weight: 400; margin-right: 4px; }
+
+  /* Empty */
+  .empty { padding: 64px 24px; text-align: center; color: var(--text3); font-size: 13px; grid-column: 1/-1; background: var(--bg); }
+  .empty p { margin-top: 8px; font-size: 12px; }
+
+  /* Modal */
+  .modal-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8); backdrop-filter: blur(6px);
+    z-index: 200; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--bg2); border: 0.5px solid var(--border2);
+    border-radius: 14px; padding: 32px; width: 500px; max-width: 100%;
+    position: relative; max-height: 90vh; overflow-y: auto;
+    animation: slideUp 0.22s ease;
+  }
+  .modal-title {
+    font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600;
+    color: var(--text); margin-bottom: 24px;
+  }
+  .modal-close {
+    position: absolute; top: 18px; right: 18px;
+    background: none; border: none; color: var(--text3); cursor: pointer;
+    transition: color 0.15s; padding: 4px;
+  }
+  .modal-close:hover { color: var(--text); }
+  .modal-close svg { width: 18px; height: 18px; }
+
+  .field { margin-bottom: 16px; }
+  .field-row { display: flex; gap: 12px; }
+  .field-row .field { flex: 1; }
+  label { display: block; font-size: 10px; color: var(--text3); font-family: 'DM Mono', monospace; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+  input[type=text], textarea, select {
+    width: 100%; background: rgba(255,255,255,0.04); border: 0.5px solid var(--border2);
+    border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 13px;
+    font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.15s;
+  }
+  input[type=text]:focus, textarea:focus, select:focus { border-color: var(--gold-border); }
+  textarea { min-height: 100px; resize: vertical; line-height: 1.6; }
+  select { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+  .upload-area {
+    border: 1px dashed rgba(255,255,255,0.14); border-radius: 8px;
+    padding: 24px 16px; text-align: center; cursor: pointer;
+    transition: all 0.18s; color: var(--text3); font-size: 12px;
+    background: rgba(255,255,255,0.02);
+  }
+  .upload-area:hover { border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim); }
+  .upload-area svg { width: 22px; height: 22px; margin-bottom: 8px; display: block; margin-left: auto; margin-right: auto; }
+  .upload-area.has-file { border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim); }
+
+  .upload-progress {
+    display: none; margin-top: 10px; background: var(--bg3); border-radius: 4px; overflow: hidden; height: 3px;
+  }
+  .upload-progress-bar { height: 100%; background: var(--gold); width: 0%; transition: width 0.3s; }
+  .upload-status { font-size: 11px; color: var(--text3); margin-top: 6px; text-align: center; display: none; }
+
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+  .btn-cancel {
+    background: transparent; border: 0.5px solid var(--border2); color: var(--text2);
+    padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px;
+    font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+  }
+  .btn-cancel:hover { border-color: var(--border2); background: var(--bg3); }
+  .btn-save {
+    background: var(--gold); border: none; color: #0a0a0f;
+    padding: 10px 24px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+  }
+  .btn-save:hover { background: var(--gold2); }
+  .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Video player modal */
+  .player-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.95); z-index: 300;
+    align-items: center; justify-content: center; flex-direction: column;
+  }
+  .player-bg.open { display: flex; }
+  .player-close {
+    position: absolute; top: 20px; right: 24px;
+    background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer;
+    font-size: 13px; font-family: 'DM Mono', monospace; letter-spacing: 0.06em;
+    display: flex; align-items: center; gap: 6px; transition: color 0.15s;
+  }
+  .player-close:hover { color: var(--text); }
+  .player-close svg { width: 16px; height: 16px; }
+  .player-title {
+    font-family: 'Playfair Display', serif; font-size: 14px; color: var(--gold);
+    margin-bottom: 16px; font-style: italic;
+  }
+  video {
+    max-width: min(860px, 85vw);
+    max-height: 70vh;
+    width: auto;
+    height: auto;
+    border-radius: 10px;
+    background: #000;
+    display: block;
+  }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .header { padding: 0 16px; }
+    .main { padding: 20px 16px 60px; }
+    .spotlight { padding: 20px; }
+    .spotlight-text { font-size: 17px; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">Dialogue <em>Pool</em></div>
+  <div class="header-middle">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input class="search" id="searchInput" placeholder="Search dialogues, movies, characters…" oninput="renderCards()" />
+  </div>
+  <div class="header-right">
+    <div class="tab-group">
+      <button class="tab active" onclick="setTab('browse')">Browse</button>
+      <button class="tab" onclick="setTab('liked')">Liked</button>
+    </div>
+    <button class="btn-shuffle" onclick="shuffle()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+      Shuffle
+    </button>
+    <button class="btn-add" onclick="openModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Add dialogue
+    </button>
+  </div>
+</header>
+
+<main class="main">
+
+
+  <div class="cats" id="catRow"></div>
+  <div id="spotlightArea"></div>
+  <div class="grid" id="cardGrid"></div>
+  <div class="statsbar" id="statsBar"></div>
+</main>
+
+<!-- Add modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="modal-title">Add dialogue</div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Movie / Show</label>
+        <input type="text" id="f-movie" placeholder="e.g. The Dark Knight" />
+      </div>
+      <div class="field" style="max-width:100px">
+        <label>Year</label>
+        <input type="text" id="f-year" placeholder="2008" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Dialogue</label>
+      <textarea id="f-dialogue" placeholder="The dialogue or quote…"></textarea>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Speaker</label>
+        <input type="text" id="f-speaker" placeholder="e.g. Joker" />
+      </div>
+      <div class="field">
+        <label>Tags (comma separated)</label>
+        <input type="text" id="f-tags" placeholder="thriller, monologue" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Video clip</label>
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('f-video').click()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m15 10 4.553-2.069A1 1 0 0 1 21 8.87v6.262a1 1 0 0 1-1.447.894L15 14"/><rect width="15" height="14" x="1" y="5" rx="2"/></svg>
+        <span id="uploadLabel">Tap to upload video clip</span>
+        <input type="file" id="f-video" accept="video/*" style="display:none" onchange="handleFileSelect(this)" />
+      </div>
+      <div class="upload-progress" id="uploadProgress"><div class="upload-progress-bar" id="uploadBar"></div></div>
+      <div class="upload-status" id="uploadStatus"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" id="saveBtn" onclick="saveDialogue()">Save dialogue</button>
+    </div>
+  </div>
+</div>
+
+<!-- Video player -->
+<div class="player-bg" id="playerBg" onclick="closePlayer(event)">
+  <button class="player-close" onclick="closePlayerDirect()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    Close
+  </button>
+  <div class="player-title" id="playerTitle"></div>
+  <video id="playerVideo" controls></video>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────
+const CLOUD_NAME = 'dmli8pepw';
+const UPLOAD_PRESET = 'dialogue_pool';
+const STORAGE_KEY = 'dialogue_pool_v1';
+
+// ── State ────────────────────────────────────────────────
+let dialogues = load();
+let activeTab = 'browse';
+let activeCategory = 'All';
+let pendingVideoFile = null;
+let pendingVideoUrl = null; // cloudinary url after upload
+let nextId = dialogues.length ? Math.max(...dialogues.map(d => d.id)) + 1 : 1;
+
+// Default sample data on first load
+if (dialogues.length === 0) {
+  dialogues = [
+    { id:1, movie:"The Dark Knight", year:"2008", dialogue:"Why so serious? Let's put a smile on that face.", speaker:"Joker", tags:["thriller","monologue"], liked:false, videoUrl:null },
+    { id:2, movie:"Good Will Hunting", year:"1997", dialogue:"It's not your fault.\n— I know.\nNo. Look at me, son. It's not your fault.", speaker:"Sean / Will", tags:["drama","emotional"], liked:true, videoUrl:null },
+    { id:3, movie:"Interstellar", year:"2014", dialogue:"We used to look up at the sky and wonder at our place in the stars. Now we just look down and worry about our place in the dirt.", speaker:"Cooper", tags:["sci-fi","monologue"], liked:true, videoUrl:null },
+    { id:4, movie:"Parasite", year:"2019", dialogue:"You know what kind of plan never fails? No plan. No plan at all.", speaker:"Ki-woo", tags:["drama","korean"], liked:false, videoUrl:null },
+    { id:5, movie:"12 Angry Men", year:"1957", dialogue:"It's not easy to stand alone against the ridicule of others.", speaker:"Juror #9", tags:["drama","courtroom"], liked:false, videoUrl:null },
+  ];
+  save();
+  nextId = 6;
+}
+
+// ── Persistence ──────────────────────────────────────────
+function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(dialogues)); } catch(e) {} }
+function load() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e) { return []; } }
+
+// ── Categories ───────────────────────────────────────────
+function allCats() {
+  const s = new Set();
+  dialogues.forEach(d => d.tags.forEach(t => s.add(t.trim().toLowerCase())));
+  return ['All', ...Array.from(s).sort()];
+}
+
+function renderCats() {
+  document.getElementById('catRow').innerHTML = allCats().map(c =>
+    `<button class="cat ${c===activeCategory?'active':''}" onclick="setCat('${c}')">${c}</button>`
+  ).join('');
+}
+
+function setCat(c) { activeCategory = c; renderCats(); renderCards(); }
+
+// ── Tab ──────────────────────────────────────────────────
+function setTab(t) {
+  activeTab = t;
+  document.querySelectorAll('.tab').forEach((b,i) => b.classList.toggle('active', ['browse','liked'][i]===t));
+  renderAll();
+}
+
+// ── Filter ───────────────────────────────────────────────
+function filtered() {
+  const q = (document.getElementById('searchInput')?.value||'').toLowerCase();
+  return dialogues.filter(d => {
+    if (activeTab==='liked' && !d.liked) return false;
+    if (activeCategory!=='All' && !d.tags.map(t=>t.toLowerCase()).includes(activeCategory)) return false;
+    if (q && ![d.movie,d.dialogue,d.speaker].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+// ── Spotlight ────────────────────────────────────────────
+function renderSpotlight() {
+  const area = document.getElementById('spotlightArea');
+  if (activeTab !== 'browse' || dialogues.length === 0) { area.innerHTML=''; return; }
+  const d = dialogues[Math.floor(Math.random() * dialogues.length)];
+  area.innerHTML = `
+  <div class="spotlight">
+    <div class="spotlight-label">Now showing</div>
+    <div class="spotlight-text">"${esc(d.dialogue).replace(/\n/g,'<br>')}"</div>
+    <div class="spotlight-meta"><strong>${esc(d.speaker)}</strong> &mdash; ${esc(d.movie)} (${esc(d.year)})</div>
+    <div class="spotlight-actions">
+      ${d.videoUrl ? `<button class="btn-sm" onclick="playVideo(${d.id})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>Watch clip
+      </button>` : ''}
+      <button class="btn-sm ${d.liked?'liked':''}" onclick="toggleLike(${d.id},this)">
+        <svg viewBox="0 0 24 24" fill="${d.liked?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        ${d.liked?'Liked':'Like'}
+      </button>
+      <button class="btn-sm" onclick="renderSpotlight()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Next
+      </button>
+    </div>
+  </div>`;
+}
+
+// ── Cards ────────────────────────────────────────────────
+function renderCards() {
+  const list = filtered();
+  const grid = document.getElementById('cardGrid');
+  if (list.length === 0) {
+    grid.innerHTML = `<div class="empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:28px;height:28px;margin:0 auto 10px;display:block;color:var(--text3)"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      No dialogues found.
+      <p>${activeTab==='liked'?'Like some dialogues to see them here.':'Try a different search or category.'}</p>
+    </div>`;
+  } else {
+    grid.innerHTML = list.map(d => `
+    <div class="card" id="card-${d.id}">
+      <div class="card-line"></div>
+      <div class="card-top">
+        <span class="card-movie">${esc(d.movie)}</span>
+        <span class="card-year">${esc(d.year)}</span>
+      </div>
+      <div class="card-dialogue">"${esc(d.dialogue).replace(/\n/g,'<br>')}"</div>
+      <div class="card-speaker">— ${esc(d.speaker)}</div>
+      <div class="card-footer">
+        <div class="card-tags">${d.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
+        <div class="card-actions">
+          ${d.videoUrl?`<button class="icon-btn" title="Watch clip" onclick="playVideo(${d.id})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </button>`:''}
+          <button class="icon-btn ${d.liked?'liked':''}" title="Like" onclick="toggleLike(${d.id},this)">
+            <svg viewBox="0 0 24 24" fill="${d.liked?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+          <button class="icon-btn danger" title="Delete" onclick="deleteD(${d.id})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>`).join('');
+  }
+  renderStats(list);
+}
+
+function renderStats(list) {
+  const liked = dialogues.filter(d=>d.liked).length;
+  const clips = dialogues.filter(d=>d.videoUrl).length;
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat"><b>${dialogues.length}</b>dialogues</div>
+    <div class="stat"><b>${liked}</b>liked</div>
+    <div class="stat"><b>${clips}</b>with clip</div>
+    <div class="stat"><b>${list.length}</b>showing</div>
+  `;
+}
+
+// ── Actions ──────────────────────────────────────────────
+function toggleLike(id) {
+  const d = dialogues.find(x=>x.id===id);
+  if (d) { d.liked=!d.liked; save(); renderAll(); }
+}
+
+function deleteD(id) {
+  if (!confirm('Remove this dialogue?')) return;
+  dialogues = dialogues.filter(x=>x.id!==id);
+  save(); renderAll();
+}
+
+function shuffle() {
+  dialogues = [...dialogues].sort(()=>Math.random()-0.5);
+  save(); renderAll();
+}
+
+// ── Video player ─────────────────────────────────────────
+function playVideo(id) {
+  const d = dialogues.find(x=>x.id===id);
+  if (!d || !d.videoUrl) return;
+  document.getElementById('playerTitle').textContent = `${d.movie} (${d.year}) — ${d.speaker}`;
+  const v = document.getElementById('playerVideo');
+  v.src = d.videoUrl;
+  document.getElementById('playerBg').classList.add('open');
+  v.play();
+}
+function closePlayer(e) { if (e.target === document.getElementById('playerBg')) closePlayerDirect(); }
+function closePlayerDirect() {
+  document.getElementById('playerBg').classList.remove('open');
+  const v = document.getElementById('playerVideo');
+  v.pause(); v.src='';
+}
+
+// ── Modal ────────────────────────────────────────────────
+function openModal() { document.getElementById('modalBg').classList.add('open'); }
+function closeModal() {
+  document.getElementById('modalBg').classList.remove('open');
+  ['f-movie','f-year','f-dialogue','f-speaker','f-tags'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('uploadLabel').textContent = 'Tap to upload video clip';
+  document.getElementById('uploadArea').classList.remove('has-file');
+  document.getElementById('uploadProgress').style.display = 'none';
+  document.getElementById('uploadStatus').style.display = 'none';
+  document.getElementById('saveBtn').disabled = false;
+  pendingVideoFile = null; pendingVideoUrl = null;
+}
+
+function handleFileSelect(input) {
+  if (input.files && input.files[0]) {
+    pendingVideoFile = input.files[0];
+    pendingVideoUrl = null;
+    document.getElementById('uploadLabel').textContent = `✓ ${pendingVideoFile.name}`;
+    document.getElementById('uploadArea').classList.add('has-file');
+  }
+}
+
+async function uploadToCloudinary(file) {
+  const progress = document.getElementById('uploadProgress');
+  const bar = document.getElementById('uploadBar');
+  const status = document.getElementById('uploadStatus');
+  progress.style.display = 'block';
+  status.style.display = 'block';
+  status.textContent = 'Uploading to Cloudinary…';
+
+  return new Promise((resolve, reject) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', UPLOAD_PRESET);
+    fd.append('resource_type', 'video');
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`);
+
+    xhr.upload.onprogress = e => {
+      if (e.lengthComputable) {
+        const pct = Math.round((e.loaded / e.total) * 100);
+        bar.style.width = pct + '%';
+        status.textContent = `Uploading… ${pct}%`;
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        const data = JSON.parse(xhr.responseText);
+        status.textContent = '✓ Upload complete';
+        resolve(data.secure_url);
+      } else {
+        reject(new Error('Upload failed'));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error('Network error'));
+    xhr.send(fd);
+  });
+}
+
+async function saveDialogue() {
+  const movie = document.getElementById('f-movie').value.trim();
+  const dialogue = document.getElementById('f-dialogue').value.trim();
+  if (!movie || !dialogue) { alert('Movie and dialogue are required.'); return; }
+
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving…';
+
+  let videoUrl = null;
+  if (pendingVideoFile) {
+    try {
+      videoUrl = await uploadToCloudinary(pendingVideoFile);
+    } catch(e) {
+      alert('Video upload failed. Saving without clip.');
+    }
+  }
+
+  const tags = document.getElementById('f-tags').value.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean);
+  dialogues.unshift({
+    id: nextId++,
+    movie,
+    year: document.getElementById('f-year').value.trim() || '',
+    dialogue,
+    speaker: document.getElementById('f-speaker').value.trim() || '—',
+    tags: tags.length ? tags : ['uncategorized'],
+    liked: false,
+    videoUrl,
+  });
+
+  save();
+  closeModal();
+  renderAll();
+}
+
+// ── Utils ────────────────────────────────────────────────
+function esc(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderAll() {
+  renderCats();
+  renderSpotlight();
+  renderCards();
+}
+
+// ── Keyboard ─────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closePlayerDirect();
+    closeModal();
+  }
+});
+
+// ── Init ─────────────────────────────────────────────────
+renderAll();
+</script>
+</body>
+</html>
