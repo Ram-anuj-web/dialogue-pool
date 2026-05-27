@@ -52,6 +52,8 @@
     background: rgba(8,8,16,0.92);
     backdrop-filter: blur(16px);
     border-bottom: 0.5px solid var(--border);
+    flex-wrap: nowrap;
+    gap: 16px;
   }
 
   .logo {
@@ -61,6 +63,11 @@
   }
   .logo em { color: var(--gold); font-style: italic; }
 
+  .header-middle { flex: 1; max-width: 460px; position: relative; }
+  .header-middle svg {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    width: 15px; height: 15px; color: var(--text3); pointer-events: none;
+  }
   .header-right { display: flex; align-items: center; gap: 10px; }
 
   .tab-group { display: flex; background: var(--bg3); border-radius: 8px; padding: 3px; border: 0.5px solid var(--border); }
@@ -81,23 +88,16 @@
   .btn-add svg { width: 14px; height: 14px; }
 
   /* Main layout */
-  .main { max-width: 1200px; margin: 0 auto; padding: 32px 32px 80px; position: relative; z-index: 1; }
+  .main { max-width: 1200px; margin: 0 auto; padding: 24px 32px 80px; position: relative; z-index: 1; }
 
   /* Controls bar */
   .controls {
     display: flex; gap: 12px; align-items: center; margin-bottom: 24px; flex-wrap: wrap;
   }
 
-  .search-wrap {
-    flex: 1; min-width: 220px; position: relative;
-  }
-  .search-wrap svg {
-    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
-    width: 15px; height: 15px; color: var(--text3); pointer-events: none;
-  }
   .search {
-    width: 100%; background: var(--bg2); border: 0.5px solid var(--border2);
-    border-radius: var(--radius); padding: 10px 14px 10px 38px;
+    width: 100%; background: rgba(255,255,255,0.06); border: 0.5px solid var(--border2);
+    border-radius: var(--radius); padding: 9px 14px 9px 38px;
     color: var(--text); font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none;
     transition: border-color 0.15s;
   }
@@ -192,6 +192,7 @@
   .card-dialogue {
     font-family: 'Playfair Display', serif; font-size: 14px; line-height: 1.7;
     color: rgba(232,224,208,0.8); font-style: italic; margin-bottom: 10px;
+    display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;
   }
   .card-speaker { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); letter-spacing: 0.04em; margin-bottom: 14px; }
 
@@ -297,23 +298,39 @@
   /* Video player modal */
   .player-bg {
     display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.95); z-index: 300;
-    align-items: center; justify-content: center; flex-direction: column;
+    background: rgba(0,0,0,0.92); z-index: 300;
+    align-items: center; justify-content: center;
   }
   .player-bg.open { display: flex; }
+  .player-inner {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center;
+    max-width: min(860px, 88vw);
+    width: 100%;
+    padding: 48px 0 24px;
+  }
   .player-close {
-    position: absolute; top: 20px; right: 24px;
-    background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer;
-    font-size: 13px; font-family: 'DM Mono', monospace; letter-spacing: 0.06em;
-    display: flex; align-items: center; gap: 6px; transition: color 0.15s;
+    position: absolute; top: 10px; right: 0;
+    background: rgba(255,255,255,0.07); border: 0.5px solid rgba(255,255,255,0.12);
+    border-radius: 8px; color: rgba(255,255,255,0.6); cursor: pointer;
+    font-size: 12px; font-family: 'DM Mono', monospace; letter-spacing: 0.06em;
+    display: flex; align-items: center; gap: 6px; transition: all 0.15s;
+    padding: 6px 12px;
   }
-  .player-close:hover { color: var(--text); }
-  .player-close svg { width: 16px; height: 16px; }
+  .player-close:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+  .player-close svg { width: 14px; height: 14px; }
   .player-title {
-    font-family: 'Playfair Display', serif; font-size: 14px; color: var(--gold);
-    margin-bottom: 16px; font-style: italic;
+    font-family: 'Playfair Display', serif; font-size: 13px; color: var(--gold);
+    margin-bottom: 14px; font-style: italic; align-self: flex-start;
   }
-  video { max-width: 860px; width: 90vw; border-radius: 10px; background: #000; }
+  video {
+    width: 100%;
+    max-height: 65vh;
+    object-fit: contain;
+    border-radius: 10px;
+    background: #000;
+    display: block;
+  }
 
   /* Animations */
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -333,11 +350,19 @@
 
 <header class="header">
   <div class="logo">Dialogue <em>Pool</em></div>
+  <div class="header-middle">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input class="search" id="searchInput" placeholder="Search dialogues, movies, characters…" oninput="renderCards()" />
+  </div>
   <div class="header-right">
     <div class="tab-group">
       <button class="tab active" onclick="setTab('browse')">Browse</button>
       <button class="tab" onclick="setTab('liked')">Liked</button>
     </div>
+    <button class="btn-shuffle" onclick="shuffle()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+      Shuffle
+    </button>
     <button class="btn-add" onclick="openModal()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
       Add dialogue
@@ -346,16 +371,7 @@
 </header>
 
 <main class="main">
-  <div class="controls">
-    <div class="search-wrap">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input class="search" id="searchInput" placeholder="Search dialogues, movies, characters…" oninput="renderCards()" />
-    </div>
-    <button class="btn-shuffle" onclick="shuffle()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
-      Shuffle
-    </button>
-  </div>
+
 
   <div class="cats" id="catRow"></div>
   <div id="spotlightArea"></div>
@@ -418,12 +434,14 @@
 
 <!-- Video player -->
 <div class="player-bg" id="playerBg" onclick="closePlayer(event)">
-  <button class="player-close" onclick="closePlayerDirect()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
-    Close
-  </button>
-  <div class="player-title" id="playerTitle"></div>
-  <video id="playerVideo" controls></video>
+  <div class="player-inner">
+    <button class="player-close" onclick="closePlayerDirect()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      Close
+    </button>
+    <div class="player-title" id="playerTitle"></div>
+    <video id="playerVideo" controls></video>
+  </div>
 </div>
 
 <script>
