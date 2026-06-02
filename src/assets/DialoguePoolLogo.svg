@@ -1,0 +1,9 @@
+<svg width="220" height="100" viewBox="0 0 220 100" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="80" cy="42" rx="36" ry="28" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="140" cy="42" rx="36" ry="28" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <rect x="102" y="14" width="16" height="56" fill="var(--seam-bg)"/>
+  <path d="M102 26 Q110 42 102 58" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="110" cy="42" r="7" fill="currentColor"/>
+  <path d="M78 80 Q88 75 98 80 Q108 85 118 80 Q128 75 138 80 Q148 85 158 80" fill="none" stroke="currentColor" stroke-width="1.8" opacity="0.45"/>
+  <path d="M85 89 Q95 84 105 89 Q115 94 125 89 Q135 84 145 89 Q155 94 165 89" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.25"/>
+</svg>
