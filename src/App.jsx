@@ -6,8 +6,10 @@ import Spotlight from './components/Spotlight'
 import DialogueCard from './components/DialogueCard'
 import AddDialogueModal from './components/AddDialogueModal'
 import VideoPlayer from './components/VideoPlayer'
+import AuthGate from './components/AuthGate'
 
 export default function App() {
+  const [currentUser, setCurrentUser] = useState(() => localStorage.getItem('dp_user') || null)
   const [dialogues, setDialogues] = useState([])
   const [activeTab, setActiveTab] = useState('browse')
   const [activeCategory, setActiveCategory] = useState('All')
@@ -50,6 +52,8 @@ export default function App() {
 
   const shuffle = () => setDialogues(prev => [...prev].sort(() => Math.random() - 0.5))
 
+  if (!currentUser) return <AuthGate onAuth={setCurrentUser} />
+
   return (
     <>
       <Navbar
@@ -63,7 +67,7 @@ export default function App() {
           <Spotlight dialogues={dialogues} onLike={toggleLike} onPlay={setPlayingVideo} />
         )}
         {loading ? (
-          <div style={{ textAlign: 'center', color: 'var(--text3)', padding: 64 }}>Loading…</div>
+          <div style={{ textAlign: 'center', color: 'var(--text3)', padding: 64 }}>Loading...</div>
         ) : (
           <>
             <div style={{
@@ -77,6 +81,7 @@ export default function App() {
                 </div>
               ) : filtered.map(d => (
                 <DialogueCard key={d.id} d={d}
+                  currentUser={currentUser}
                   onLike={() => toggleLike(d.id, d.liked)}
                   onDelete={() => deleteDialogue(d.id)}
                   onEdit={() => { setEditingDialogue(d); setShowModal(true) }}
@@ -99,6 +104,7 @@ export default function App() {
       {showModal && (
         <AddDialogueModal
           editing={editingDialogue}
+          currentUser={currentUser}
           onClose={() => { setShowModal(false); setEditingDialogue(null) }}
           onSaved={fetchDialogues}
         />
