@@ -179,7 +179,7 @@ function getTheme(tags) {
   return TAG_THEMES.default
 }
 
-export default function DialogueCard({ d, onLike, onDelete, onEdit, onPlay, currentUser }) {
+export default function DialogueCard({ d, onLike, onDelete, onEdit, onPlay, currentUser, themed }) {
   const canDelete = d.added_by === currentUser
   const t = themed ? getTheme(d.tags) : TAG_THEMES.default
 
