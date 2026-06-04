@@ -11,6 +11,7 @@ import AuthGate from './components/AuthGate'
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => localStorage.getItem('dp_user') || null)
   const [dialogues, setDialogues] = useState([])
+  const [themedCards, setThemedCards] = useState(true)
   const [activeTab, setActiveTab] = useState('browse')
   const [activeCategory, setActiveCategory] = useState('All')
   const [search, setSearch] = useState('')
@@ -70,6 +71,20 @@ export default function App() {
           <div style={{ textAlign: 'center', color: 'var(--text3)', padding: 64 }}>Loading...</div>
         ) : (
           <>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 12 }}>
+              <button
+                onClick={() => setThemedCards(prev => !prev)}
+                style={{
+                  background: 'none', border: '0.5px solid var(--border2)',
+                  color: themedCards ? 'var(--gold)' : 'var(--text3)',
+                  fontFamily: 'DM Mono, monospace', fontSize: 10,
+                  padding: '4px 12px', borderRadius: 20, cursor: 'pointer',
+                  letterSpacing: '0.04em', transition: 'color 0.15s'
+                }}
+              >
+                {themedCards ? '✦ themed' : '○ default'}
+              </button>
+            </div>
             <div style={{
               display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))',
               gap: 1, background: 'var(--border)', borderRadius: 12,
@@ -80,7 +95,10 @@ export default function App() {
                   No dialogues found.
                 </div>
               ) : filtered.map(d => (
-                <DialogueCard key={d.id} d={d}
+                <DialogueCard
+                  key={d.id}
+                  d={d}
+                  themed={themedCards}
                   currentUser={currentUser}
                   onLike={() => toggleLike(d.id, d.liked)}
                   onDelete={() => deleteDialogue(d.id)}

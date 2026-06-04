@@ -165,6 +165,7 @@ const TAG_THEMES = {
     dialogueFont: "'Playfair Display', serif",
     monoFont: "'DM Mono', monospace",
   },
+  
 }
 
 function getTheme(tags) {
@@ -180,7 +181,7 @@ function getTheme(tags) {
 
 export default function DialogueCard({ d, onLike, onDelete, onEdit, onPlay, currentUser }) {
   const canDelete = d.added_by === currentUser
-  const t = getTheme(d.tags)
+  const t = themed ? getTheme(d.tags) : TAG_THEMES.default
 
   const cardStyle = {
     background: t.bg,
