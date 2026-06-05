@@ -1,226 +1,102 @@
-// DialogueCard.jsx — tag-based theming, default matches existing dark gold theme
+// DialogueCard.jsx — tag-based theming + poster, character_name, timestamp
 
 const TAG_THEMES = {
-  // Default (no tag match) — your existing theme
   default: {
-    bg: '#080810',
-    bg2: '#0e0e1a',
-    accent: '#c9a96e',
-    accentDim: 'rgba(201,169,110,0.15)',
-    accentBorder: 'rgba(201,169,110,0.25)',
-    text: '#e8e0d0',
-    text2: 'rgba(232,224,208,0.55)',
-    text3: 'rgba(232,224,208,0.28)',
-    border: 'rgba(255,255,255,0.07)',
-    dialogueFont: "'Playfair Display', serif",
-    monoFont: "'DM Mono', monospace",
+    bg: '#080810', bg2: '#0e0e1a', accent: '#c9a96e',
+    accentDim: 'rgba(201,169,110,0.15)', accentBorder: 'rgba(201,169,110,0.25)',
+    text: '#e8e0d0', text2: 'rgba(232,224,208,0.55)', text3: 'rgba(232,224,208,0.28)',
+    border: 'rgba(255,255,255,0.07)', dialogueFont: "'Playfair Display', serif", monoFont: "'DM Mono', monospace",
   },
   action: {
-  bg: '#08090d', bg2: '#0f1018',
-  accent: '#e05a5a',
-  accentDim: 'rgba(224,90,90,0.13)',
-  accentBorder: 'rgba(224,90,90,0.26)',
-  text: '#f0e6e6', text2: 'rgba(240,230,230,0.5)', text3: 'rgba(240,230,230,0.26)',
-  border: 'rgba(224,90,90,0.09)',
-  dialogueFont: "'Playfair Display', serif",
-  monoFont: "'DM Mono', monospace",
-},
-
+    bg: '#08090d', bg2: '#0f1018', accent: '#e05a5a',
+    accentDim: 'rgba(224,90,90,0.13)', accentBorder: 'rgba(224,90,90,0.26)',
+    text: '#f0e6e6', text2: 'rgba(240,230,230,0.5)', text3: 'rgba(240,230,230,0.26)',
+    border: 'rgba(224,90,90,0.09)', dialogueFont: "'Playfair Display', serif", monoFont: "'DM Mono', monospace",
+  },
   thriller: {
-    bg: '#0d0608',
-    bg2: '#150a0d',
-    accent: '#c0392b',
-    accentDim: 'rgba(192,57,43,0.15)',
-    accentBorder: 'rgba(192,57,43,0.3)',
-    text: '#f0e6e6',
-    text2: 'rgba(240,230,230,0.55)',
-    text3: 'rgba(240,230,230,0.28)',
-    border: 'rgba(255,80,80,0.08)',
-    dialogueFont: "'Playfair Display', serif",
-    monoFont: "'DM Mono', monospace",
+    bg: '#0d0608', bg2: '#150a0d', accent: '#c0392b',
+    accentDim: 'rgba(192,57,43,0.15)', accentBorder: 'rgba(192,57,43,0.3)',
+    text: '#f0e6e6', text2: 'rgba(240,230,230,0.55)', text3: 'rgba(240,230,230,0.28)',
+    border: 'rgba(255,80,80,0.08)', dialogueFont: "'Playfair Display', serif", monoFont: "'DM Mono', monospace",
   },
-
   crime: {
-    bg: '#08090d',
-    bg2: '#0f1018',
-    accent: '#7b8cde',
-    accentDim: 'rgba(123,140,222,0.15)',
-    accentBorder: 'rgba(123,140,222,0.25)',
-    text: '#dde3f5',
-    text2: 'rgba(221,227,245,0.55)',
-    text3: 'rgba(221,227,245,0.28)',
-    border: 'rgba(123,140,222,0.1)',
-    dialogueFont: "'Playfair Display', serif",
-    monoFont: "'DM Mono', monospace",
+    bg: '#08090d', bg2: '#0f1018', accent: '#7b8cde',
+    accentDim: 'rgba(123,140,222,0.15)', accentBorder: 'rgba(123,140,222,0.25)',
+    text: '#dde3f5', text2: 'rgba(221,227,245,0.55)', text3: 'rgba(221,227,245,0.28)',
+    border: 'rgba(123,140,222,0.1)', dialogueFont: "'Playfair Display', serif", monoFont: "'DM Mono', monospace",
   },
-
   comedy: {
-    bg: '#0d0b05',
-    bg2: '#171208',
-    accent: '#e8a825',
-    accentDim: 'rgba(232,168,37,0.15)',
-    accentBorder: 'rgba(232,168,37,0.28)',
-    text: '#f5eedb',
-    text2: 'rgba(245,238,219,0.55)',
-    text3: 'rgba(245,238,219,0.28)',
-    border: 'rgba(232,168,37,0.09)',
-    dialogueFont: "'Playfair Display', serif",
-    monoFont: "'DM Mono', monospace",
+    bg: '#0d0b05', bg2: '#171208', accent: '#e8a825',
+    accentDim: 'rgba(232,168,37,0.15)', accentBorder: 'rgba(232,168,37,0.28)',
+    text: '#f5eedb', text2: 'rgba(245,238,219,0.55)', text3: 'rgba(245,238,219,0.28)',
+    border: 'rgba(232,168,37,0.09)', dialogueFont: "'Playfair Display', serif", monoFont: "'DM Mono', monospace",
   },
-
   romance: {
-    bg: '#0d0509',
-    bg2: '#160a10',
-    accent: '#d4608a',
-    accentDim: 'rgba(212,96,138,0.15)',
-    accentBorder: 'rgba(212,96,138,0.28)',
-    text: '#f5dfe8',
-    text2: 'rgba(245,223,232,0.55)',
-    text3: 'rgba(245,223,232,0.28)',
-    border: 'rgba(212,96,138,0.09)',
-    dialogueFont: "'Playfair Display', serif",
-    monoFont: "'DM Mono', monospace",
+    bg: '#0d0509', bg2: '#160a10', accent: '#d4608a',
+    accentDim: 'rgba(212,96,138,0.15)', accentBorder: 'rgba(212,96,138,0.28)',
+    text: '#f5dfe8', text2: 'rgba(245,223,232,0.55)', text3: 'rgba(245,223,232,0.28)',
+    border: 'rgba(212,96,138,0.09)', dialogueFont: "'Playfair Display', serif", monoFont: "'DM Mono', monospace",
   },
-
   drama: {
-    bg: '#090909',
-    bg2: '#111111',
-    accent: '#a0a0a0',
-    accentDim: 'rgba(160,160,160,0.12)',
-    accentBorder: 'rgba(160,160,160,0.22)',
-    text: '#e8e8e8',
-    text2: 'rgba(232,232,232,0.5)',
-    text3: 'rgba(232,232,232,0.26)',
-    border: 'rgba(255,255,255,0.07)',
-    dialogueFont: "'Playfair Display', serif",
-    monoFont: "'DM Mono', monospace",
+    bg: '#090909', bg2: '#111111', accent: '#a0a0a0',
+    accentDim: 'rgba(160,160,160,0.12)', accentBorder: 'rgba(160,160,160,0.22)',
+    text: '#e8e8e8', text2: 'rgba(232,232,232,0.5)', text3: 'rgba(232,232,232,0.26)',
+    border: 'rgba(255,255,255,0.07)', dialogueFont: "'Playfair Display', serif", monoFont: "'DM Mono', monospace",
   },
-
   scifi: {
-    bg: '#050d10',
-    bg2: '#091318',
-    accent: '#00d4c8',
-    accentDim: 'rgba(0,212,200,0.12)',
-    accentBorder: 'rgba(0,212,200,0.25)',
-    text: '#d0f0ee',
-    text2: 'rgba(208,240,238,0.5)',
-    text3: 'rgba(208,240,238,0.26)',
-    border: 'rgba(0,212,200,0.09)',
-    dialogueFont: "'DM Mono', monospace",
-    monoFont: "'DM Mono', monospace",
+    bg: '#050d10', bg2: '#091318', accent: '#00d4c8',
+    accentDim: 'rgba(0,212,200,0.12)', accentBorder: 'rgba(0,212,200,0.25)',
+    text: '#d0f0ee', text2: 'rgba(208,240,238,0.5)', text3: 'rgba(208,240,238,0.26)',
+    border: 'rgba(0,212,200,0.09)', dialogueFont: "'DM Mono', monospace", monoFont: "'DM Mono', monospace",
   },
-
   horror: {
-    bg: '#060304',
-    bg2: '#0d0608',
-    accent: '#8b0000',
-    accentDim: 'rgba(139,0,0,0.18)',
-    accentBorder: 'rgba(139,0,0,0.32)',
-    text: '#e0d5d5',
-    text2: 'rgba(224,213,213,0.5)',
-    text3: 'rgba(224,213,213,0.25)',
-    border: 'rgba(139,0,0,0.1)',
-    dialogueFont: "'Playfair Display', serif",
-    monoFont: "'DM Mono', monospace",
+    bg: '#060304', bg2: '#0d0608', accent: '#8b0000',
+    accentDim: 'rgba(139,0,0,0.18)', accentBorder: 'rgba(139,0,0,0.32)',
+    text: '#e0d5d5', text2: 'rgba(224,213,213,0.5)', text3: 'rgba(224,213,213,0.25)',
+    border: 'rgba(139,0,0,0.1)', dialogueFont: "'Playfair Display', serif", monoFont: "'DM Mono', monospace",
   },
-
   adventure: {
-    bg: '#060c08',
-    bg2: '#0a1510',
-    accent: '#4caf7d',
-    accentDim: 'rgba(76,175,125,0.13)',
-    accentBorder: 'rgba(76,175,125,0.26)',
-    text: '#d8f0e0',
-    text2: 'rgba(216,240,224,0.5)',
-    text3: 'rgba(216,240,224,0.26)',
-    border: 'rgba(76,175,125,0.09)',
-    dialogueFont: "'Playfair Display', serif",
-    monoFont: "'DM Mono', monospace",
+    bg: '#060c08', bg2: '#0a1510', accent: '#4caf7d',
+    accentDim: 'rgba(76,175,125,0.13)', accentBorder: 'rgba(76,175,125,0.26)',
+    text: '#d8f0e0', text2: 'rgba(216,240,224,0.5)', text3: 'rgba(216,240,224,0.26)',
+    border: 'rgba(76,175,125,0.09)', dialogueFont: "'Playfair Display', serif", monoFont: "'DM Mono', monospace",
   },
-
   philosophy: {
-    bg: '#080a0d',
-    bg2: '#0e1118',
-    accent: '#9b8fc4',
-    accentDim: 'rgba(155,143,196,0.13)',
-    accentBorder: 'rgba(155,143,196,0.26)',
-    text: '#e2dff0',
-    text2: 'rgba(226,223,240,0.5)',
-    text3: 'rgba(226,223,240,0.26)',
-    border: 'rgba(155,143,196,0.09)',
-    dialogueFont: "'Playfair Display', serif",
-    monoFont: "'DM Mono', monospace",
+    bg: '#080a0d', bg2: '#0e1118', accent: '#9b8fc4',
+    accentDim: 'rgba(155,143,196,0.13)', accentBorder: 'rgba(155,143,196,0.26)',
+    text: '#e2dff0', text2: 'rgba(226,223,240,0.5)', text3: 'rgba(226,223,240,0.26)',
+    border: 'rgba(155,143,196,0.09)', dialogueFont: "'Playfair Display', serif", monoFont: "'DM Mono', monospace",
   },
-
   war: {
-    bg: '#090800',
-    bg2: '#120f00',
-    accent: '#b8960c',
-    accentDim: 'rgba(184,150,12,0.13)',
-    accentBorder: 'rgba(184,150,12,0.26)',
-    text: '#f0ead0',
-    text2: 'rgba(240,234,208,0.5)',
-    text3: 'rgba(240,234,208,0.26)',
-    border: 'rgba(184,150,12,0.09)',
-    dialogueFont: "'Playfair Display', serif",
-    monoFont: "'DM Mono', monospace",
+    bg: '#090800', bg2: '#120f00', accent: '#b8960c',
+    accentDim: 'rgba(184,150,12,0.13)', accentBorder: 'rgba(184,150,12,0.26)',
+    text: '#f0ead0', text2: 'rgba(240,234,208,0.5)', text3: 'rgba(240,234,208,0.26)',
+    border: 'rgba(184,150,12,0.09)', dialogueFont: "'Playfair Display', serif", monoFont: "'DM Mono', monospace",
   },
   noir: {
-  bg: '#080808',
-  bg2: '#0f0f0f',
-  accent: '#a0a0a0',
-  accentDim: 'rgba(160,160,160,0.12)',
-  accentBorder: 'rgba(160,160,160,0.22)',
-  text: '#d8d8d8',
-  text2: 'rgba(216,216,216,0.5)',
-  text3: 'rgba(216,216,216,0.26)',
-  border: 'rgba(160,160,160,0.08)',
-  dialogueFont: "'Playfair Display', serif",
-  monoFont: "'DM Mono', monospace",
-},
-
-western: {
-  bg: '#0d0900',
-  bg2: '#160e00',
-  accent: '#c8860a',
-  accentDim: 'rgba(200,134,10,0.14)',
-  accentBorder: 'rgba(200,134,10,0.28)',
-  text: '#f0e8d0',
-  text2: 'rgba(240,232,208,0.52)',
-  text3: 'rgba(240,232,208,0.27)',
-  border: 'rgba(200,134,10,0.09)',
-  dialogueFont: "'Playfair Display', serif",
-  monoFont: "'DM Mono', monospace",
-},
-
-fantasy: {
-  bg: '#08060d',
-  bg2: '#100c18',
-  accent: '#9b6bcc',
-  accentDim: 'rgba(155,107,204,0.14)',
-  accentBorder: 'rgba(155,107,204,0.27)',
-  text: '#e8dff5',
-  text2: 'rgba(232,223,245,0.52)',
-  text3: 'rgba(232,223,245,0.27)',
-  border: 'rgba(155,107,204,0.09)',
-  dialogueFont: "'Playfair Display', serif",
-  monoFont: "'DM Mono', monospace",
-},
-
-mystery: {
-  bg: '#050d0d',
-  bg2: '#091414',
-  accent: '#1fb8b8',
-  accentDim: 'rgba(31,184,184,0.13)',
-  accentBorder: 'rgba(31,184,184,0.26)',
-  text: '#d0ecec',
-  text2: 'rgba(208,236,236,0.5)',
-  text3: 'rgba(208,236,236,0.26)',
-  border: 'rgba(31,184,184,0.09)',
-  dialogueFont: "'Playfair Display', serif",
-  monoFont: "'DM Mono', monospace",
-},
-  
+    bg: '#080808', bg2: '#0f0f0f', accent: '#a0a0a0',
+    accentDim: 'rgba(160,160,160,0.12)', accentBorder: 'rgba(160,160,160,0.22)',
+    text: '#d8d8d8', text2: 'rgba(216,216,216,0.5)', text3: 'rgba(216,216,216,0.26)',
+    border: 'rgba(160,160,160,0.08)', dialogueFont: "'Playfair Display', serif", monoFont: "'DM Mono', monospace",
+  },
+  western: {
+    bg: '#0d0900', bg2: '#160e00', accent: '#c8860a',
+    accentDim: 'rgba(200,134,10,0.14)', accentBorder: 'rgba(200,134,10,0.28)',
+    text: '#f0e8d0', text2: 'rgba(240,232,208,0.52)', text3: 'rgba(240,232,208,0.27)',
+    border: 'rgba(200,134,10,0.09)', dialogueFont: "'Playfair Display', serif", monoFont: "'DM Mono', monospace",
+  },
+  fantasy: {
+    bg: '#08060d', bg2: '#100c18', accent: '#9b6bcc',
+    accentDim: 'rgba(155,107,204,0.14)', accentBorder: 'rgba(155,107,204,0.27)',
+    text: '#e8dff5', text2: 'rgba(232,223,245,0.52)', text3: 'rgba(232,223,245,0.27)',
+    border: 'rgba(155,107,204,0.09)', dialogueFont: "'Playfair Display', serif", monoFont: "'DM Mono', monospace",
+  },
+  mystery: {
+    bg: '#050d0d', bg2: '#091414', accent: '#1fb8b8',
+    accentDim: 'rgba(31,184,184,0.13)', accentBorder: 'rgba(31,184,184,0.26)',
+    text: '#d0ecec', text2: 'rgba(208,236,236,0.5)', text3: 'rgba(208,236,236,0.26)',
+    border: 'rgba(31,184,184,0.09)', dialogueFont: "'Playfair Display', serif", monoFont: "'DM Mono', monospace",
+  },
 }
 
 function getTheme(tags) {
@@ -234,13 +110,23 @@ function getTheme(tags) {
   return TAG_THEMES.default
 }
 
+// Convert "01:23:45" or "1:23" to seconds for video deep-link
+function timestampToSeconds(ts) {
+  if (!ts) return 0
+  const parts = ts.split(':').map(Number).reverse()
+  return (parts[0] || 0) + (parts[1] || 0) * 60 + (parts[2] || 0) * 3600
+}
+
 export default function DialogueCard({ d, onLike, onDelete, onEdit, onPlay, currentUser, themed }) {
   const canDelete = d.added_by === currentUser
   const t = themed ? getTheme(d.tags) : TAG_THEMES.default
 
+  // character_name takes priority over speaker
+  const characterDisplay = d.character_name || d.speaker || '—'
+
   const cardStyle = {
     background: t.bg,
-    padding: '24px 24px 18px',
+    padding: '20px 20px 16px',
     position: 'relative',
     overflow: 'hidden',
     animation: 'fadeIn 0.3s ease',
@@ -260,16 +146,33 @@ export default function DialogueCard({ d, onLike, onDelete, onEdit, onPlay, curr
         background: `linear-gradient(90deg, ${t.accent}40, transparent)`,
       }} />
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-        <span style={{
-          fontFamily: t.monoFont, fontSize: 10, letterSpacing: '0.06em',
-          color: t.accent, textTransform: 'uppercase',
-        }}>
-          {d.movie}
-        </span>
-        <span style={{ fontSize: 11, color: t.text3 }}>{d.year}</span>
+      {/* ── Header: poster + movie/year ── */}
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 12 }}>
+        {/* Poster thumbnail */}
+        {d.poster_url && (
+          <img
+            src={d.poster_url}
+            alt={d.movie}
+            style={{
+              width: 36, height: 54, objectFit: 'cover', borderRadius: 4, flexShrink: 0,
+              border: `0.5px solid ${t.accentBorder}`, opacity: 0.85,
+            }}
+          />
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <span style={{
+              fontFamily: t.monoFont, fontSize: 10, letterSpacing: '0.06em',
+              color: t.accent, textTransform: 'uppercase',
+            }}>
+              {d.movie}
+            </span>
+            <span style={{ fontSize: 11, color: t.text3, flexShrink: 0, marginLeft: 8 }}>{d.year}</span>
+          </div>
+        </div>
       </div>
 
+      {/* ── Dialogue text ── */}
       <div style={{
         fontFamily: t.dialogueFont, fontSize: 14, lineHeight: 1.7,
         color: t.text2, fontStyle: 'italic', marginBottom: 10,
@@ -279,31 +182,70 @@ export default function DialogueCard({ d, onLike, onDelete, onEdit, onPlay, curr
         "{d.dialogue}"
       </div>
 
+      {/* ── Character name ── */}
       <div style={{
         fontFamily: t.monoFont, fontSize: 10,
         color: t.text3, letterSpacing: '0.04em', marginBottom: 14,
       }}>
-        — {d.speaker}
+        — {characterDisplay}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+      {/* ── Footer: tags + timestamp chip + actions ── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center', flex: 1, minWidth: 0 }}>
           {(d.tags || []).map(tag => (
             <span key={tag} style={{
               fontSize: 9, padding: '2px 8px', borderRadius: 20,
-              background: t.accentDim,
-              color: t.text3,
+              background: t.accentDim, color: t.text3,
               border: `0.5px solid ${t.accentBorder}`,
               fontFamily: t.monoFont, letterSpacing: '0.04em',
             }}>
               {tag}
             </span>
           ))}
+
+          {/* Timestamp chip — only show if video_url exists */}
+          {d.timestamp && d.video_url && (
+            <button
+              title={`Jump to ${d.timestamp}`}
+              onClick={() => {
+                const secs = timestampToSeconds(d.timestamp)
+                // pass seconds offset to onPlay so VideoPlayer can seek
+                onPlay(secs)
+              }}
+              style={{
+                fontSize: 9, padding: '2px 8px', borderRadius: 20,
+                background: 'rgba(255,255,255,0.05)', color: t.text3,
+                border: `0.5px solid rgba(255,255,255,0.1)`,
+                fontFamily: t.monoFont, letterSpacing: '0.04em',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3,
+                transition: 'color 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = t.accent}
+              onMouseLeave={e => e.currentTarget.style.color = t.text3}
+            >
+              ▶ {d.timestamp}
+            </button>
+          )}
+
+          {/* Timestamp chip without video — just display, no click */}
+          {d.timestamp && !d.video_url && (
+            <span style={{
+              fontSize: 9, padding: '2px 8px', borderRadius: 20,
+              background: 'rgba(255,255,255,0.04)', color: t.text3,
+              border: `0.5px solid rgba(255,255,255,0.08)`,
+              fontFamily: t.monoFont, letterSpacing: '0.04em',
+              display: 'flex', alignItems: 'center', gap: 3,
+            }}>
+              ▶ {d.timestamp}
+            </span>
+          )}
         </div>
 
-        <div style={{ display: 'flex', gap: 6 }}>
+        {/* Action buttons */}
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
           {d.video_url && (
-            <IconBtn title="Watch clip" onClick={onPlay} accent={t.accent} text3={t.text3}>
+            <IconBtn title="Watch clip" onClick={() => onPlay(0)} accent={t.accent} text3={t.text3}>
               <PlayIcon />
             </IconBtn>
           )}
