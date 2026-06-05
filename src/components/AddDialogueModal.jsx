@@ -30,25 +30,33 @@ const SAMPLE_DIALOGUE = {
   speaker: 'Joker',
 }
 
-export default function AddDialogueModal({ editing, onClose, onSaved }) {
+export default function AddDialogueModal({ editing, onClose, onSaved, currentUser }) {
   const [movie, setMovie]       = useState('')
   const [year, setYear]         = useState('')
   const [dialogue, setDialogue] = useState('')
   const [speaker, setSpeaker]   = useState('')
   const [tags, setTags]         = useState('')
+  const [timestamp, setTimestamp] = useState('')
   const [videoFile, setVideoFile] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress]   = useState(0)
   const [saving, setSaving]       = useState(false)
   const [selectedTheme, setSelectedTheme] = useState('default')
   const [showThemeEditor, setShowThemeEditor] = useState(false)
+  const [posterUrl, setPosterUrl] = useState(null)
+  const [posterFetching, setPosterFetching] = useState(false)
+  const [posterFetched, setPosterFetched] = useState(false)
 
   useEffect(() => {
     if (editing) {
-      setMovie(editing.movie || ''); setYear(editing.year || '')
-      setDialogue(editing.dialogue || ''); setSpeaker(editing.speaker || '')
+      setMovie(editing.movie || '')
+      setYear(editing.year || '')
+      setDialogue(editing.dialogue || '')
+      setSpeaker(editing.speaker || '')
       setTags((editing.tags || []).join(', '))
-      // auto-select theme based on first tag
+      setTimestamp(editing.timestamp || '')
+      setPosterUrl(editing.poster_url || null)
+      if (editing.poster_url) setPosterFetched(true)
       const firstTag = (editing.tags || [])[0]?.toLowerCase()
       if (firstTag && TAG_THEMES[firstTag]) setSelectedTheme(firstTag)
     }
@@ -60,15 +68,54 @@ export default function AddDialogueModal({ editing, onClose, onSaved }) {
     if (firstTag && TAG_THEMES[firstTag]) setSelectedTheme(firstTag)
   }, [tags])
 
+  // auto-fetch poster when movie name is typed (debounced)
+  useEffect(() => {
+    if (!movie || movie.length < 2) {
+      if (!editing?.poster_url) { setPosterUrl(null); setPosterFetched(false) }
+      return
+    }
+    // don't re-fetch if movie name hasn't changed from editing
+    if (editing && movie === editing.movie && editing.poster_url) return
+
+    const timer = setTimeout(async () => {
+      setPosterFetching(true)
+      const url = await fetchPoster(movie)
+      setPosterUrl(url)
+      setPosterFetched(true)
+      setPosterFetching(false)
+    }, 800)
+
+    return () => clearTimeout(timer)
+  }, [movie])
+
   const t = TAG_THEMES[selectedTheme]
+
+  // ── TMDB poster fetch ──
+  const fetchPoster = async (movieTitle) => {
+    if (!movieTitle) return null
+    const apiKey = import.meta.env.VITE_TMDB_API_KEY
+    if (!apiKey) return null
+    try {
+      const res = await fetch(
+        `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(movieTitle)}`
+      )
+      const data = await res.json()
+      const path = data.results?.[0]?.poster_path
+      return path ? `https://image.tmdb.org/t/p/w300${path}` : null
+    } catch {
+      return null
+    }
+  }
 
   const uploadVideo = (file) => new Promise((resolve, reject) => {
     setUploading(true)
     const fd = new FormData()
-    fd.append('file', file); fd.append('upload_preset', UPLOAD_PRESET); fd.append('resource_type', 'video')
+    fd.append('file', file)
+    fd.append('upload_preset', UPLOAD_PRESET)
+    fd.append('resource_type', 'video')
     const xhr = new XMLHttpRequest()
     xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`)
-    xhr.upload.onprogress = e => { if (e.lengthComputable) setProgress(Math.round(e.loaded/e.total*100)) }
+    xhr.upload.onprogress = e => { if (e.lengthComputable) setProgress(Math.round(e.loaded / e.total * 100)) }
     xhr.onload = () => { setUploading(false); xhr.status === 200 ? resolve(JSON.parse(xhr.responseText).secure_url) : reject() }
     xhr.onerror = () => { setUploading(false); reject() }
     xhr.send(fd)
@@ -77,20 +124,43 @@ export default function AddDialogueModal({ editing, onClose, onSaved }) {
   const handleSave = async () => {
     if (!movie || !dialogue) return alert('Movie and dialogue are required.')
     setSaving(true)
+
     let videoUrl = editing?.video_url || null
-    if (videoFile) { try { videoUrl = await uploadVideo(videoFile) } catch { alert('Upload failed') } }
+    if (videoFile) {
+      try { videoUrl = await uploadVideo(videoFile) } catch { alert('Upload failed') }
+    }
+
+    // If poster wasn't auto-fetched yet (e.g. user typed fast and saved), fetch now
+    let finalPosterUrl = posterUrl
+    if (!finalPosterUrl && movie) {
+      finalPosterUrl = await fetchPoster(movie)
+    }
+
     const tagArr = tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean)
-    const payload = { movie, year, dialogue, speaker: speaker || '—', tags: tagArr.length ? tagArr : ['uncategorized'], video_url: videoUrl }
+    const payload = {
+      movie,
+      year,
+      dialogue,
+      speaker: speaker || '—',
+      character_name: speaker || null,
+      tags: tagArr.length ? tagArr : ['uncategorized'],
+      video_url: videoUrl,
+      poster_url: finalPosterUrl || null,
+      timestamp: timestamp.trim() || null,
+      added_by: currentUser,
+    }
 
     if (editing) {
       await supabase.from('dialogues').update(payload).eq('id', editing.id)
     } else {
       await supabase.from('dialogues').insert([{ ...payload, liked: false }])
     }
-    setSaving(false); onSaved(); onClose()
+    setSaving(false)
+    onSaved()
+    onClose()
   }
 
-  // preview values: use actual form values if filled, else sample
+  // preview values
   const previewMovie    = movie    || SAMPLE_DIALOGUE.movie
   const previewYear     = year     || SAMPLE_DIALOGUE.year
   const previewDialogue = dialogue || SAMPLE_DIALOGUE.dialogue
@@ -118,18 +188,84 @@ export default function AddDialogueModal({ editing, onClose, onSaved }) {
           {/* ── LEFT: form ── */}
           <div style={{ flex: 1, minWidth: 0 }}>
 
+            {/* Movie / Year row */}
             <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-              <Field label="Movie / Show"><input value={movie} onChange={e => setMovie(e.target.value)} placeholder="e.g. The Dark Knight" style={inputStyle} /></Field>
-              <Field label="Year" style={{ maxWidth: 100 }}><input value={year} onChange={e => setYear(e.target.value)} placeholder="2008" style={inputStyle} /></Field>
+              <Field label="Movie / Show">
+                <div style={{ position: 'relative' }}>
+                  <input
+                    value={movie}
+                    onChange={e => { setMovie(e.target.value); setPosterFetched(false) }}
+                    placeholder="e.g. The Dark Knight"
+                    style={inputStyle}
+                  />
+                  {/* poster status indicator */}
+                  {movie.length > 1 && (
+                    <div style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {posterFetching && (
+                        <div style={{ width: 12, height: 12, border: '1.5px solid var(--text3)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                      )}
+                      {!posterFetching && posterFetched && posterUrl && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4caf7d" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      )}
+                      {!posterFetching && posterFetched && !posterUrl && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {/* poster thumbnail preview */}
+                {posterUrl && (
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <img
+                      src={posterUrl}
+                      alt="poster"
+                      style={{ width: 32, height: 48, objectFit: 'cover', borderRadius: 4, border: '0.5px solid var(--border2)' }}
+                    />
+                    <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'DM Mono,monospace' }}>poster found</span>
+                    <button
+                      onClick={() => { setPosterUrl(null); setPosterFetched(false) }}
+                      style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 10, fontFamily: 'DM Mono,monospace', padding: 0 }}
+                    >
+                      remove ×
+                    </button>
+                  </div>
+                )}
+              </Field>
+              <Field label="Year" style={{ maxWidth: 100 }}>
+                <input value={year} onChange={e => setYear(e.target.value)} placeholder="2008" style={inputStyle} />
+              </Field>
             </div>
 
+            {/* Dialogue */}
             <Field label="Dialogue" style={{ marginBottom: 16 }}>
               <textarea value={dialogue} onChange={e => setDialogue(e.target.value)} placeholder="The dialogue or quote…" style={{ ...inputStyle, minHeight: 100, resize: 'vertical', lineHeight: 1.6 }} />
             </Field>
 
+            {/* Speaker / Tags row */}
             <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-              <Field label="Speaker"><input value={speaker} onChange={e => setSpeaker(e.target.value)} placeholder="e.g. Joker" style={inputStyle} /></Field>
-              <Field label="Tags (comma separated)"><input value={tags} onChange={e => setTags(e.target.value)} placeholder="thriller, monologue" style={inputStyle} /></Field>
+              <Field label="Speaker / Character">
+                <input value={speaker} onChange={e => setSpeaker(e.target.value)} placeholder="e.g. Joker" style={inputStyle} />
+              </Field>
+              <Field label="Tags (comma separated)">
+                <input value={tags} onChange={e => setTags(e.target.value)} placeholder="thriller, monologue" style={inputStyle} />
+              </Field>
+            </div>
+
+            {/* Timestamp */}
+            <div style={{ marginBottom: 16 }}>
+              <Field label="Timestamp (optional)">
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <input
+                    value={timestamp}
+                    onChange={e => setTimestamp(e.target.value)}
+                    placeholder="01:23:45"
+                    style={{ ...inputStyle, maxWidth: 130 }}
+                  />
+                  <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'DM Mono,monospace', lineHeight: 1.4 }}>
+                    Links to this moment<br />in the video clip
+                  </span>
+                </div>
+              </Field>
             </div>
 
             {/* Theme editor toggle */}
@@ -147,13 +283,11 @@ export default function AddDialogueModal({ editing, onClose, onSaved }) {
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
                 {showThemeEditor ? 'Hide theme editor' : 'Theme editor'}
-                <span style={{
-                  display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
-                  background: t.accent, marginLeft: 2,
-                }} />
+                <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: t.accent, marginLeft: 2 }} />
               </button>
             </div>
 
+            {/* Video clip */}
             <Field label="Video clip" style={{ marginBottom: 0 }}>
               <div
                 onClick={() => document.getElementById('modal-video-input').click()}
@@ -170,6 +304,7 @@ export default function AddDialogueModal({ editing, onClose, onSaved }) {
               )}
             </Field>
 
+            {/* Action buttons */}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 24 }}>
               <button onClick={onClose} style={{ background: 'transparent', border: '0.5px solid var(--border2)', color: 'var(--text2)', padding: '10px 20px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontFamily: 'DM Sans,sans-serif' }}>Cancel</button>
               <button onClick={handleSave} disabled={saving || uploading} style={{ background: 'var(--gold)', border: 'none', color: '#0a0a0f', padding: '10px 24px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 500, fontFamily: 'DM Sans,sans-serif', opacity: saving || uploading ? 0.5 : 1 }}>
@@ -223,22 +358,34 @@ export default function AddDialogueModal({ editing, onClose, onSaved }) {
                 {/* top accent line */}
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg, ${t.accent}40, transparent)` }} />
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                  <span style={{ fontFamily: t.monoFont, fontSize: 9, letterSpacing: '0.06em', color: t.accent, textTransform: 'uppercase' }}>
-                    {previewMovie}
-                  </span>
-                  <span style={{ fontSize: 9, color: t.text3 }}>{previewYear}</span>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                  {/* poster thumbnail in preview */}
+                  {posterUrl && (
+                    <img
+                      src={posterUrl}
+                      alt="poster"
+                      style={{ width: 28, height: 42, objectFit: 'cover', borderRadius: 3, flexShrink: 0, border: `0.5px solid ${t.accentBorder}` }}
+                    />
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                      <span style={{ fontFamily: t.monoFont, fontSize: 9, letterSpacing: '0.06em', color: t.accent, textTransform: 'uppercase' }}>
+                        {previewMovie}
+                      </span>
+                      <span style={{ fontSize: 9, color: t.text3 }}>{previewYear}</span>
+                    </div>
+
+                    <div style={{ fontFamily: t.dialogueFont, fontSize: 11, lineHeight: 1.65, color: t.text2, fontStyle: 'italic', marginBottom: 6 }}>
+                      "{previewDialogue.length > 90 ? previewDialogue.slice(0, 90) + '…' : previewDialogue}"
+                    </div>
+
+                    <div style={{ fontFamily: t.monoFont, fontSize: 9, color: t.text3, letterSpacing: '0.04em', marginBottom: 6 }}>
+                      — {previewSpeaker}
+                    </div>
+                  </div>
                 </div>
 
-                <div style={{ fontFamily: t.dialogueFont, fontSize: 11, lineHeight: 1.65, color: t.text2, fontStyle: 'italic', marginBottom: 6 }}>
-                  "{previewDialogue.length > 90 ? previewDialogue.slice(0, 90) + '…' : previewDialogue}"
-                </div>
-
-                <div style={{ fontFamily: t.monoFont, fontSize: 9, color: t.text3, letterSpacing: '0.04em', marginBottom: 8 }}>
-                  — {previewSpeaker}
-                </div>
-
-                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
                   {previewTags.map(tag => (
                     <span key={tag} style={{
                       fontSize: 8, padding: '2px 7px', borderRadius: 20,
@@ -249,12 +396,29 @@ export default function AddDialogueModal({ editing, onClose, onSaved }) {
                       {tag}
                     </span>
                   ))}
+                  {/* timestamp chip in preview */}
+                  {timestamp && (
+                    <span style={{
+                      fontSize: 8, padding: '2px 7px', borderRadius: 20,
+                      background: 'rgba(255,255,255,0.05)', color: t.text3,
+                      border: `0.5px solid rgba(255,255,255,0.1)`,
+                      fontFamily: t.monoFont, letterSpacing: '0.04em',
+                      display: 'flex', alignItems: 'center', gap: 3,
+                    }}>
+                      ▶ {timestamp}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
     </div>
   )
 }
